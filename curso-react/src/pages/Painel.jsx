@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import {supabase} from '../../utils/supabase';
 
 function Painel() {
     const [modal, setModal] = useState(false) //bollean
@@ -8,6 +8,8 @@ function Painel() {
     const [logged, setLogged] = useState({})
     const [isEdit, setIsEdit] = useState(false)
     const [index,setIndex] = useState(-1)
+    const [spiner, setSpiner] = useState(false)
+    const [msg, setMsg] = useState('')
 
     useEffect(
         () => {
@@ -29,22 +31,19 @@ function Painel() {
         setIndex(indice)
     }
 
-    function handleRegister() {
-        let newUsers = []
-        if(index != -1){
-                newUsers = [...users]
-                newUsers [index] = user
+    async function handleRegister() {
+        setSpiner(true)       
+        const {data: authData, error: authError} = await supabase.auth.signUp({
+            email:user.email,
+            password: user.senha
 
-        }else{
-            newUsers = [...users,user]        
+        });
+
+        if (authError){
+            setMsg(authError)
+            setSpiner(false)
+            return;
         }
-
-        setUsers(newUsers)
-        localStorage.setItem('users', JSON.stringify(newUsers))
-        setUser({})
-        setModal(false)
-        sentIndex (-1)
-        setIsEdit(false)
     }
 
     return (
@@ -79,18 +78,19 @@ function Painel() {
                                 Nome:
                                 <input value={user.nome} onChange={(e) => setUser({ ...user, nome: e.target.value })} type="text" placeholder="Digite seu nome completo" />
                                 Email:
-                                <input value={user.nome} onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder="Digite o seu melhor email" />
+                                <input value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} type="email" placeholder="Digite o seu melhor email" />
 
                                 Senha:
                                 <input onChange={(e) => setUser({ ...user, senha: e.target.value })} type="password" placeholder="Letra maiúscula e números" />
                                 Data de nascimento:
-                                <input value={user.nome} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
+                                <input value={user.nascimento} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
 
                                 {index != -1 && (
                                 <a onClick={() => setIsEdit(false)} className="mt-5 text-white text-center rounded-md py-2 bg-red-500">Cancelar</a>
                                 )
                                 }
-                                <a onClick={handleRegister} className="mt-5 bg-primary text-white text-center rounded-md py-2">Salvar</a>
+                                <a onClick={handleRegister} className="mt-5 bg-primary text-white text-center rounded-md py-2"> {spiner? '...' : 'Salvar'} </a>
+                                {msg}
 
                             </form>) : //else
                             (

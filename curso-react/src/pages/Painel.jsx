@@ -40,11 +40,44 @@ function Painel() {
         });
 
         if (authError){
-            setMsg(authError)
+            //console.log(authError)
+            setMsg(authError.message)
             setSpiner(false)
             return;
         }
+
+        if(!authData){
+            setMsg("não foi possivel cadastrar, verifica a internet")
+            setSpiner(false)
+            return;
+        }
+
+        const {data:loginData, error:loginError}= await supabase.auth.signInWithPassword({
+                email:user.email, 
+                password:user.senha
+            });
+
+
+
+        const {error: profileError} = await supabase.from("alunos").insert({
+                user_id: loginData.user.id,
+                nome: user.nome,
+                sala: user.sala,
+                cpf: user.cpf
+            });
+
+        if (profileError){
+            //console.log(authError)
+            setMsg(profileError.message)
+            setSpiner(false)
+            return;
+        }
+
+        setSpiner(false)
+
     }
+
+   
 
     return (
         <div>
@@ -82,8 +115,12 @@ function Painel() {
 
                                 Senha:
                                 <input onChange={(e) => setUser({ ...user, senha: e.target.value })} type="password" placeholder="Letra maiúscula e números" />
-                                Data de nascimento:
-                                <input value={user.nascimento} onChange={(e) => setUser({ ...user, nascimento: e.target.value })} type="date" />
+
+                                Sala:
+                                <input value={user.sala} onChange={(e) => setUser({ ...user, sala: e.target.value })} type="numeric" />
+
+                                CPF: 
+                                <input value={user.cpf} onChange={(e) => setUser({ ...user, cpf: e.target.value })} type="text" />
 
                                 {index != -1 && (
                                 <a onClick={() => setIsEdit(false)} className="mt-5 text-white text-center rounded-md py-2 bg-red-500">Cancelar</a>
